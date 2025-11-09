@@ -71,7 +71,7 @@ method = 'gam', var = TRUE)
 
 ```
 
-### Estimating the Treatment Effect on a Longitudinal Surrogate Marker
+### Estimating the Treatment Effect on a Longitudinal Surrogate Marker: Wang et al. (2025)
 
 Let's now take a look at the dataset **data_sjm** which we will use to illustrate the semiparametric joint modeling methods. Here our aim is to estimate the treatment effect on a longitudinal surrogate in the presence of a censored outcome. This setting is quite different from the first section of this tutorial because here, the marker should be known to be a surrogate. 
 
