@@ -28,7 +28,7 @@ If you are viewing the html version of this tutorial, you can find the R markdow
 
 ### Evaluating a Longitudinal Surrogate Marker: Agniel and Parast (2021) 
 
-Let's first take a look at the example dataset included in the package, **full_data**. The dataset has 10100 observations and contains a uniqie person ID, **id**, the treatment group, **a**,  times that the surrogate marker was measured, **tt**, the longitudinal surrogate **x**, and the primary outcome **y**. 
+Let's first take a look at the example dataset included in the package, **full_data**. The dataset has 10100 observations and contains a unique person ID, **id**, the treatment group, **a**,  times that the surrogate marker was measured, **tt**, the longitudinal surrogate **x**, and the primary outcome **y**. People are repeated multiple times such that each row represents a different surrogate measurement.
 
 ```{r}
 data(full_data)
@@ -36,7 +36,11 @@ names(full_data)
 head(full_data)
 ```
 
-Our goal is to evaluate the proportion of the treatment effect (PTE) on the primary outcome that is explained by the treatment effect on the longitudinal surrogate. Let's take a look at the estimated PTE using the Agniel and Parast (2021) estimation methods with the example data described above. The function **estimate_surrogate_value** provides the estimated treatment effect on the primary outcome, **Deltahat**, the residual treatment effect, **Deltahat_S** and the PTE, denoted as **R**. The estimator **type** can be either 'gam', 'linear', or 'kernel', we first use linear below with **var=FALSE**. We use **dplyr** to reshape our dataset. 
+Our goal is to evaluate the proportion of the treatment effect (PTE) on the primary outcome that is explained by the treatment effect on the longitudinal surrogate. Let's take a look at the estimated PTE using the Agniel and Parast (2021) estimation methods with the example data described above. The function **estimate_surrogate_value** provides the estimated treatment effect on the primary outcome, denoted **Deltahat**, the residual treatment effect, denoted **Deltahat_S** and the PTE, denoted as **R**. 
+
+At a minimum the function requires data on the primary outcome in **y_t** which is the vector of primary outcome measurements for the treatment group, and **y_c** which is the same, but for the control group; and the longitudinal surrogate marker measurements which should be given in **X_t** which is a matrix of surrogate measurements for the treatment group with the number of rows equal to the number of individuals and the number of columns equal to the number of surrogate measurements, and similarly for **X_c** for the control group. Therefore, we first have to reshape our data to be of a form that we can give to the function, we do this with **dplyr** below. 
+
+In addition, the estimator **type** can be either 'gam', 'linear', or 'kernel', we first use the linear option below with **var=FALSE**. 
 
 ```{r results = "hide", message=FALSE}
 library(dplyr)
@@ -58,7 +62,7 @@ estimate_surrogate_value(y_t = y_t, y_c = y_c, X_t = X_t, X_c = X_c,
 method = 'linear', var = FALSE)
 ```
 
-Next, we use "gam" estimation and set **var=TRUE** to get variance estimates and confidence intervals.
+Next, we use "gam" estimation and set **var=TRUE** to get variance estimates and 95\% confidence intervals, which are obtained using bootstrapping.
 
 ```{r}
 
@@ -69,28 +73,32 @@ method = 'gam', var = TRUE)
 
 ### Estimating the Treatment Effect on a Longitudinal Surrogate Marker
 
-Let's now take a look at the dataset **data_sjm** which we will use to illustrate the semiparametric joint modeling methods. Here our aim is to estimate the treatment effect on a lognitudinal surrogate in the presence of a censored outcome.  This dataset contains 200 observations containing the event indicator **delta**, the time that the surrogate marker was measured for each observation, **optT**, the surrogate marker measurements over time for each observation, **Y**, the observed event or censoring time for each observation, **Time**, and the treatment indicator for each observation with 1 for treated and 0 for control, **Treatment**.
+Let's now take a look at the dataset **data_sjm** which we will use to illustrate the semiparametric joint modeling methods. Here our aim is to estimate the treatment effect on a longitudinal surrogate in the presence of a censored outcome. This setting is quite different from the first section of this tutorial because here, the marker should be known to be a surrogate. 
+
+This dataset contains 200 observations with the event indicator **delta**; the time that the surrogate marker was measured for each observation (a matrix), **obsT**; the surrogate marker measurements over time for each observation (a matrix), **Y**; the observed event or censoring time for each observation, **Time**; and the treatment indicator for each observation with 1 for treated and 0 for control, **Treatment**.
 
 ```{r}
 data(data_sjm)
 names(data_sjm)
 ```
 
-This packages offers to methods this treatment effect assuming either a linear model or a nonlinear model for the surrogate trajectory. We first illustrate linear below with **var=TRUE**. 
+This packages offers methods to estimate this treatment effect assuming either a linear model or a nonlinear model for the surrogate trajectory.  At a minimum this function requires **X**, a vector that reflects the treatment indicator; **Time**, a vector which contains the event or censoring time; **Delta**, a vector which contains the event indicator; **obsT**, a matrix of the times that the surrogate was measured for each observation; **Y**, a matrix of the surrogate marker measurements for each observation, with both matrices such that the number of rows in the number of individuals and the number of columns is the number of surrogate marker measurements. 
+
+We first illustrate the linear model below with **var=TRUE** meaning that we would like variance estimates and 95\% confidence intervals, obtained with resampling. We use **n.resample=5** for the number of iterations for resampling, only for illustration; in practice, this number should be larger e.g. 100 or 200.
 
 ```{r}
 sjm_linear_estimate(X=data_sjm$Treatment, Time = data_sjm$Time, 
 Delta = data_sjm$delta, obsT = data_sjm$obsT, Y = data_sjm$Y, n.resample=5, var=TRUE)
 
 ```
- The function returns the point estimates for the hazard ratio, the treatment effect on the baseline surrogate measurement, and the treatment effect on the surrogate trajectory, **est**. Since **var=TRUE**, the function also returns the corresponding standard error estimates, and lower and upper bounds of the 95\% confidence intervals, respectively, **SE, CI_lower, CI_upper**. Next, we use the nonlinear estimator with   **var=FALSE**. For the nonlinear function, the user must additionally specify a **gap_time** used to create the grid for the trakectory estimates. 
+ The function returns the point estimates for the hazard ratio, the treatment effect on the baseline surrogate measurement, and the treatment effect on the surrogate trajectory (in that order), **est**. Since **var=TRUE**, the function also returns the corresponding standard error estimates, and lower and upper bounds of the 95\% confidence intervals, respectively, **SE, CI_lower, CI_upper**. Next, we use the nonlinear estimator with   **var=FALSE**. For the nonlinear function, the user should additionally specify a **gap_time** used to create the grid for the trajectory estimates. 
  
 ```{r}
 sjm_nl_estimate(X=data_sjm$Treatment, Time = data_sjm$Time, 
 Delta = data_sjm$delta, obsT = data_sjm$obsT, Y = data_sjm$Y, var=FALSE, gap_time=0.2)
 
 ```
- The function returns the hazard ratio estimate, **est**, and the estimated treatment effect on the surrogate trajectory, **est_t**, estimates on the grid points **t_grid**. If **var=TRUE**, similar to the linear function, corresponding standard errors and confidence bounds are returned. 
+ The function returns the hazard ratio estimate, **est**; the estimated treatment effect on the surrogate trajectory, **est_t**; and the grid points **t_grid** that correspond to these estimates. If **var=TRUE**, similar to the linear function, corresponding standard errors and confidence bounds are returned. 
 
 That's all for now. Please email <parast@austin.utexas.edu> if you have questions.
 

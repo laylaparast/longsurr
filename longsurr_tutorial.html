@@ -379,10 +379,12 @@ called longsurr_tutorial.Rmd.</p>
 (2021)</h3>
 <p>Let’s first take a look at the example dataset included in the
 package, <strong>full_data</strong>. The dataset has 10100 observations
-and contains a uniqie person ID, <strong>id</strong>, the treatment
+and contains a unique person ID, <strong>id</strong>, the treatment
 group, <strong>a</strong>, times that the surrogate marker was measured,
 <strong>tt</strong>, the longitudinal surrogate <strong>x</strong>, and
-the primary outcome <strong>y</strong>.</p>
+the primary outcome <strong>y</strong>. People are repeated multiple
+times such that each row represents a different surrogate
+measurement.</p>
 <pre class="r"><code>data(full_data)
 names(full_data)</code></pre>
 <pre><code>## [1] &quot;id&quot; &quot;a&quot;  &quot;tt&quot; &quot;x&quot;  &quot;y&quot;</code></pre>
@@ -401,12 +403,24 @@ on the primary outcome that is explained by the treatment effect on the
 longitudinal surrogate. Let’s take a look at the estimated PTE using the
 Agniel and Parast (2021) estimation methods with the example data
 described above. The function <strong>estimate_surrogate_value</strong>
-provides the estimated treatment effect on the primary outcome,
-<strong>Deltahat</strong>, the residual treatment effect,
-<strong>Deltahat_S</strong> and the PTE, denoted as <strong>R</strong>.
-The estimator <strong>type</strong> can be either ‘gam’, ‘linear’, or
-‘kernel’, we first use linear below with <strong>var=FALSE</strong>. We
-use <strong>dplyr</strong> to reshape our dataset.</p>
+provides the estimated treatment effect on the primary outcome, denoted
+<strong>Deltahat</strong>, the residual treatment effect, denoted
+<strong>Deltahat_S</strong> and the PTE, denoted as
+<strong>R</strong>.</p>
+<p>At a minimum the function requires data on the primary outcome in
+<strong>y_t</strong> which is the vector of primary outcome measurements
+for the treatment group, and <strong>y_c</strong> which is the same, but
+for the control group; and the longitudinal surrogate marker
+measurements which should be given in <strong>X_t</strong> which is a
+matrix of surrogate measurements for the treatment group with the number
+of rows equal to the number of individuals and the number of columns
+equal to the number of surrogate measurements, and similarly for
+<strong>X_c</strong> for the control group. Therefore, we first have to
+reshape our data to be of a form that we can give to the function, we do
+this with <strong>dplyr</strong> below.</p>
+<p>In addition, the estimator <strong>type</strong> can be either ‘gam’,
+‘linear’, or ‘kernel’, we first use the linear option below with
+<strong>var=FALSE</strong>.</p>
 <pre class="r"><code>library(dplyr)</code></pre>
 <pre class="r"><code>wide_ds &lt;- full_data %&gt;%
     dplyr::select(id, a, tt, x, y) %&gt;%
@@ -434,13 +448,14 @@ estimate_surrogate_value(y_t = y_t, y_c = y_c, X_t = X_t, X_c = X_c,
 ##      &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;
 ## 1     1.14      0.811 0.287</code></pre>
 <p>Next, we use “gam” estimation and set <strong>var=TRUE</strong> to
-get variance estimates and confidence intervals.</p>
+get variance estimates and 95% confidence intervals, which are obtained
+using bootstrapping.</p>
 <pre class="r"><code>estimate_surrogate_value(y_t = y_t, y_c = y_c, X_t = X_t, X_c = X_c,
     method = &quot;gam&quot;, var = TRUE)</code></pre>
 <pre><code>## # A tibble: 1 × 9
 ##   Deltahat Deltahat_S     R Deltahat_S_se Deltahat_S_ci_l Deltahat_S_ci_h  R_se
 ##      &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;         &lt;dbl&gt;           &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;
-## 1     1.14      0.669 0.411         0.225           0.133            1.09 0.263
+## 1     1.14      0.669 0.411         0.308          0.0906            1.34 0.380
 ## # ℹ 2 more variables: R_ci_l &lt;dbl&gt;, R_ci_h &lt;dbl&gt;</code></pre>
 </div>
 <div id="estimating-the-treatment-effect-on-a-longitudinal-surrogate-marker" class="section level3">
@@ -448,21 +463,38 @@ get variance estimates and confidence intervals.</p>
 Marker</h3>
 <p>Let’s now take a look at the dataset <strong>data_sjm</strong> which
 we will use to illustrate the semiparametric joint modeling methods.
-Here our aim is to estimate the treatment effect on a lognitudinal
-surrogate in the presence of a censored outcome. This dataset contains
-200 observations containing the event indicator <strong>delta</strong>,
-the time that the surrogate marker was measured for each observation,
-<strong>optT</strong>, the surrogate marker measurements over time for
-each observation, <strong>Y</strong>, the observed event or censoring
-time for each observation, <strong>Time</strong>, and the treatment
-indicator for each observation with 1 for treated and 0 for control,
+Here our aim is to estimate the treatment effect on a longitudinal
+surrogate in the presence of a censored outcome. This setting is quite
+different from the first section of this tutorial because here, the
+marker should be known to be a surrogate.</p>
+<p>This dataset contains 200 observations with the event indicator
+<strong>delta</strong>; the time that the surrogate marker was measured
+for each observation (a matrix), <strong>obsT</strong>; the surrogate
+marker measurements over time for each observation (a matrix),
+<strong>Y</strong>; the observed event or censoring time for each
+observation, <strong>Time</strong>; and the treatment indicator for each
+observation with 1 for treated and 0 for control,
 <strong>Treatment</strong>.</p>
 <pre class="r"><code>data(data_sjm)
 names(data_sjm)</code></pre>
 <pre><code>## [1] &quot;delta&quot;     &quot;obsT&quot;      &quot;Y&quot;         &quot;Time&quot;      &quot;Treatment&quot;</code></pre>
-<p>This packages offers to methods this treatment effect assuming either
-a linear model or a nonlinear model for the surrogate trajectory. We
-first illustrate linear below with <strong>var=TRUE</strong>.</p>
+<p>This packages offers methods to estimate this treatment effect
+assuming either a linear model or a nonlinear model for the surrogate
+trajectory. At a minimum this function requires <strong>X</strong>, a
+vector that reflects the treatment indicator; <strong>Time</strong>, a
+vector which contains the event or censoring time;
+<strong>Delta</strong>, a vector which contains the event indicator;
+<strong>obsT</strong>, a matrix of the times that the surrogate was
+measured for each observation; <strong>Y</strong>, a matrix of the
+surrogate marker measurements for each observation, with both matrices
+such that the number of rows in the number of individuals and the number
+of columns is the number of surrogate marker measurements.</p>
+<p>We first illustrate the linear model below with
+<strong>var=TRUE</strong> meaning that we would like variance estimates
+and 95% confidence intervals, obtained with resampling. We use
+<strong>n.resample=5</strong> for the number of iterations for
+resampling, only for illustration; in practice, this number should be
+larger e.g. 100 or 200.</p>
 <pre class="r"><code>sjm_linear_estimate(X = data_sjm$Treatment, Time = data_sjm$Time,
     Delta = data_sjm$delta, obsT = data_sjm$obsT, Y = data_sjm$Y,
     n.resample = 5, var = TRUE)</code></pre>
@@ -470,23 +502,23 @@ first illustrate linear below with <strong>var=TRUE</strong>.</p>
 ## [1]  0.5545396 -1.0565856  2.7384461
 ## 
 ## $SE
-## [1] 0.1556999 1.3798696 0.6145094
+## [1] 0.1333839 2.0074849 0.2133987
 ## 
 ## $CI_lower
-## [1]  0.3540167 -3.0448305  1.7687058
+## [1]  0.4657875 -4.4643729  2.7929281
 ## 
 ## $CI_upper
-## [1]  0.7122766 -0.1249426  3.2912494</code></pre>
+## [1] 0.79704633 0.03912582 3.30608949</code></pre>
 <p>The function returns the point estimates for the hazard ratio, the
 treatment effect on the baseline surrogate measurement, and the
-treatment effect on the surrogate trajectory, <strong>est</strong>.
-Since <strong>var=TRUE</strong>, the function also returns the
-corresponding standard error estimates, and lower and upper bounds of
-the 95% confidence intervals, respectively, <strong>SE, CI_lower,
-CI_upper</strong>. Next, we use the nonlinear estimator with
-<strong>var=FALSE</strong>. For the nonlinear function, the user must
+treatment effect on the surrogate trajectory (in that order),
+<strong>est</strong>. Since <strong>var=TRUE</strong>, the function also
+returns the corresponding standard error estimates, and lower and upper
+bounds of the 95% confidence intervals, respectively, <strong>SE,
+CI_lower, CI_upper</strong>. Next, we use the nonlinear estimator with
+<strong>var=FALSE</strong>. For the nonlinear function, the user should
 additionally specify a <strong>gap_time</strong> used to create the grid
-for the trakectory estimates.</p>
+for the trajectory estimates.</p>
 <pre class="r"><code>sjm_nl_estimate(X = data_sjm$Treatment, Time = data_sjm$Time,
     Delta = data_sjm$delta, obsT = data_sjm$obsT, Y = data_sjm$Y,
     var = FALSE, gap_time = 0.2)</code></pre>
@@ -513,12 +545,12 @@ for the trakectory estimates.</p>
 ## [31]  6.0  6.2  6.4  6.6  6.8  7.0  7.2  7.4  7.6  7.8  8.0  8.2  8.4  8.6  8.8
 ## [46]  9.0  9.2  9.4  9.6  9.8 10.0 10.2 10.4 10.6 10.8 11.0 11.2 11.4 11.6 11.8
 ## [61] 12.0 12.2 12.4 12.6 12.8 13.0 13.2 13.4 13.6 13.8 14.0 14.2 14.4</code></pre>
-<p>The function returns the hazard ratio estimate, <strong>est</strong>,
-and the estimated treatment effect on the surrogate trajectory,
-<strong>est_t</strong>, estimates on the grid points
-<strong>t_grid</strong>. If <strong>var=TRUE</strong>, similar to the
-linear function, corresponding standard errors and confidence bounds are
-returned.</p>
+<p>The function returns the hazard ratio estimate, <strong>est</strong>;
+the estimated treatment effect on the surrogate trajectory,
+<strong>est_t</strong>; and the grid points <strong>t_grid</strong> that
+correspond to these estimates. If <strong>var=TRUE</strong>, similar to
+the linear function, corresponding standard errors and confidence bounds
+are returned.</p>
 <p>That’s all for now. Please email <a href="mailto:parast@austin.utexas.edu" class="email">parast@austin.utexas.edu</a> if you have questions.</p>
 <hr />
 </div>
