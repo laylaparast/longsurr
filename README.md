@@ -1,7 +1,7 @@
 # longsurr <img src="hex_longsurr.png" align="right" height="220" alt="longsurr hex logo" />
 
 <!-- badges: start -->
-<!--[![CRAN status](https://www.r-pkg.org/badges/version/SurrogateOutcome)](https://CRAN.R-project.org/package=SurrogateOutcome)-->
+[![CRAN status](https://www.r-pkg.org/badges/version/longsurr)](https://CRAN.R-project.org/package=longsurr)
 <!-- badges: end -->
 
 `longsurr` is an `R` package to (1) assess the proportion of treatment effect explained by a longitudinal surrogate marker, and (2) estimate the treatment effect on a longitudinal surrogate marker   
