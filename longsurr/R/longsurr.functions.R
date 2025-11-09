@@ -27,7 +27,7 @@ estimate_surrogate_value <- function(y_t, y_c, X_t, X_c, method = c('gam', 'line
              R_ci_l = NA,
              R_ci_h = NA)
   }
-  if(var) {tibble::tibble(
+  if(var) {tt = tibble::tibble(
     Deltahat = Deltahat,
     Deltahat_S = Deltahat_S,
     R = 1 - Deltahat_S/Deltahat,
@@ -39,12 +39,13 @@ estimate_surrogate_value <- function(y_t, y_c, X_t, X_c, method = c('gam', 'line
     R_ci_h = boot_ci_h$R
   )
   }
- if(!var) {tibble::tibble(
+ if(!var) {tt = tibble::tibble(
     Deltahat = Deltahat,
     Deltahat_S = Deltahat_S,
-    R = 1 - Deltahat_S/Deltahat,
+    R = 1 - Deltahat_S/Deltahat
   )
   }
+  return(tt)
 }
   
 boot_fn <- function(b, method, k, y_t, y_c, X_t, X_c) {
@@ -739,7 +740,7 @@ sjm_linear_estimate=function(X, Time, Delta, obsT, Y, n.resample=100, var=FALSE)
   ind=sapply(1:length(tt), function(k){which.min((tt[k]-cumhaz.tt$time)[(tt[k]-cumhaz.tt$time)>=0])})
   Lambda0_T1=(cumhaz.tt$cumhaz[as.numeric(ind)]); 
   Lambda0_T1[is.na(Lambda0_T1)]=0
-  ind=sapply(1:n, function(k){which.min((T[k]-cumhaz.tt$time)[(T[k]-cumhaz.tt$time)>=0])})
+  ind=sapply(1:n, function(k){which.min((Time[k]-cumhaz.tt$time)[(Time[k]-cumhaz.tt$time)>=0])})
   Lambda0_T=(cumhaz.tt$cumhaz[as.numeric(ind)])
   
   ## Estimate beta
@@ -828,8 +829,8 @@ sjm_nl_estimate=function(X, Time, Delta, obsT, Y, gap_time=0.1, n.resample=100, 
   ind=sapply(1:length(tt), function(k){which.min((tt[k]-cumhaz.tt$time)[(tt[k]-cumhaz.tt$time)>=0])})
   Lambda0_T1=(cumhaz.tt$cumhaz[as.numeric(ind)]); 
   Lambda0_T1[is.na(Lambda0_T1)]=0
-  ind=sapply(1:n, function(k){which.min((T[k]-cumhaz.tt$time)[(T[k]-cumhaz.tt$time)>=0])})
-  Lambda0_T=(cumhaz.tt$cumhaz[as.numeric(ind)])
+  ind=sapply(1:n, function(k){which.min((Time[k]-cumhaz.tt$time)[(Time[k]-cumhaz.tt$time)>=0])})
+  Lambda0_T=(cumhaz.tt$cumhaz[ind])
   
     
   ## nonlinear: splines

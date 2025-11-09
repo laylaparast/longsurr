@@ -6,7 +6,8 @@ Semiparametric Joint Modeling of the Treatment Effect on a Longitudinal Surrogat
 Semiparametric joint modeling of the treatment effect on a longitudinal surrogate using both a Cox proportional hazards model and a splines-based model
 }
 \usage{
-sjm_nl_estimate(X, Time, Delta, obsT, Y, gap_time = 0.1, n.resample = 100, var = FALSE)
+sjm_nl_estimate(X, Time, Delta, obsT, Y, gap_time = 0.1, n.resample = 100, 
+var = FALSE)
 }
 \arguments{
   \item{X}{
@@ -53,7 +54,7 @@ A list of estimates is returned:
 }
 \references{
 Wang X, Zhou J, Parast L, Greene T (2025). Semiparametric Joint Modeling to Estimate
-the Treatment Eﬀect on a Longitudinal Surrogate with Application to Chronic Kidney
+the Treatment Effect on a Longitudinal Surrogate with Application to Chronic Kidney
 Disease Trials. Biometrics, 81(3): ujaf104.
 }
 \author{
@@ -62,10 +63,12 @@ Xuan Wang
 
 \examples{
 data(data_sjm)
+\donttest{
+
 sjm_nl_estimate(X=data_sjm$Treatment, Time = data_sjm$Time, 
 Delta = data_sjm$delta, obsT = data_sjm$obsT, Y = data_sjm$Y, gap_time=0.2)
 
-\donttest{sjm_nl_estimate(X=data_sjm$Treatment, Time = 
+sjm_nl_estimate(X=data_sjm$Treatment, Time = 
 data_sjm$Time, Delta = data_sjm$delta, obsT = data_sjm$obsT, 
 Y = data_sjm$Y, gap_time = 0.2, n.resample=5, var=TRUE)}
 

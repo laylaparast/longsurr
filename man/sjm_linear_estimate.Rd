@@ -44,8 +44,9 @@ A list of estimates is returned:
 }
 \references{
 Wang X, Zhou J, Parast L, Greene T (2025). Semiparametric Joint Modeling to Estimate
-the Treatment Eﬀect on a Longitudinal Surrogate with Application to Chronic Kidney
+the Treatment Effect on a Longitudinal Surrogate with Application to Chronic Kidney
 Disease Trials. Biometrics, 81(3): ujaf104.
+ 
 }
 \author{
 Xuan Wang}

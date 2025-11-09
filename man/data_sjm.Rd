@@ -14,7 +14,7 @@ Simulated example data for semiparametric joint Estimation functions
   \describe{
     \item{\code{delta}}{numeric vector containing the event indicator for each observation}
     \item{\code{obsT}}{numeric matrix containing the time that the surrogate marker was measured for each observation; number of rows is equal to the number of observations (200) and number of columns is equal to the maximum number of surrogate markers measured (15)}
-      \item{\code{Y}}{numeric matrix containing the the surrogate marker measurements over time for each observation; same dimension as obsT}
+      \item{\code{Y}}{numeric matrix containing the surrogate marker measurements over time for each observation; same dimension as obsT}
      \item{\code{Time}}{numeric vector containing the observed event or censoring time for each observation }
        \item{\code{Treatment}}{numeric vector containing the treatment indicator for each observation with 1 for treated and 0 for control}
   }
